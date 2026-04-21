@@ -1,0 +1,435 @@
+/*
+  NoteGenius – Responsive Layout Styles
+  ---------------------------------------------------
+  * Mobile‑first approach – .container is flex column on small screens.
+  * On screens wider than 768px the layout switches to a two‑column
+    desktop view with a persistent sidebar.
+*/
+
+/* Variables are defined in globals.css */
+
+/* ---------------------------------------------------
+   Base Layout (mobile first)
+   --------------------------------------------------- */
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Mobile header – visible only on small screens */
+.mobileHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--surface-glass);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+/* Sidebar – hidden on mobile, shown on desktop */
+.sidebar {
+  width: 280px;
+  background: var(--surface-glass);
+  backdrop-filter: blur(20px);
+  border-right: 1px solid var(--border-color);
+  padding: 2.5rem 1.5rem;
+  display: none; /* mobile default */
+  flex-direction: column;
+  gap: 2.5rem;
+  z-index: 60;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  letter-spacing: -0.02em;
+}
+
+.profileWidget {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 1.25rem;
+  position: relative;
+}
+
+.profileHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.editButton {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  padding: 4px;
+}
+
+.editButton:hover {
+  opacity: 1;
+}
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.input {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  width: 100%;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary-light);
+}
+
+.formActions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.saveButton {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  flex: 1;
+}
+
+.cancelButton {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  border: none;
+  border-radius: 6px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.profileWidget h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.25rem;
+}
+
+.profileWidget p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.stats {
+  border-top: 1px solid var(--border-color);
+  padding-top: 1rem;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.statItem span {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.statItem strong {
+  font-size: 1.2rem;
+  color: var(--primary-light);
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.navItem:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.navItemActive {
+  background: rgba(79, 70, 229, 0.1);
+  color: var(--primary-light);
+  border: 1px solid rgba(79, 70, 229, 0.2);
+}
+
+.navIcon {
+  font-size: 1.2rem;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  background: var(--background);
+  gap: 1.5rem;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--primary-light);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+/* Main content area */
+.mainContent {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* Header inside main content */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.headerActions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Grid of subject cards */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.subjectCard {
+  background: var(--surface-glass);
+  border-radius: 12px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.subjectCard:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.6);
+  border-color: rgba(79, 70, 229, 0.3);
+}
+
+.subjectHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.subjectColor {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.subjectMeta {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Bottom navigation – only on mobile */
+.bottomNav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  background: var(--surface-glass);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border-color);
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 0.5rem;
+  z-index: 100;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bottomNavItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+  text-align: center;
+}
+
+.bottomNavItem:hover,
+.bottomNavItemActive {
+  color: var(--primary-light);
+  background: rgba(79, 70, 229, 0.1);
+}
+
+.bottomNavItem span:first-child {
+  font-size: 1.4rem;
+}
+
+/* Force mobile layout overrides when mobileContainer class is present */
+.mobileContainer {
+  flex-direction: column !important;
+}
+
+.mobileContainer .mobileHeader {
+  display: flex !important;
+}
+
+.mobileContainer .sidebar {
+  display: none !important;
+}
+
+.mobileContainer .bottomNav {
+  display: flex !important;
+}
+
+.mobileContainer .mainContent {
+  padding-bottom: 100px !important;
+}
+
+/* ---------------------------------------------------
+   Desktop breakpoint – ≥768px
+   --------------------------------------------------- */
+@media (min-width: 768px) {
+  .container {
+    flex-direction: row;
+    height: 100vh;
+  }
+
+  .mobileHeader {
+    display: none;
+  }
+
+  .sidebar {
+    display: flex;
+  }
+
+  .mainContent {
+    padding: 3rem;
+    padding-bottom: 3rem; /* keep space for bottom nav on desktop (not visible) */
+  }
+
+  .header {
+    flex-wrap: nowrap;
+    margin-bottom: 3rem;
+  }
+
+  .headerActions {
+    gap: 1rem;
+  }
+
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .bottomNav {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------
+   Small mobile tweaks – ≤480px (optional)
+   --------------------------------------------------- */
+@media (max-width: 480px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .headerActions {
+    width: 100%;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}

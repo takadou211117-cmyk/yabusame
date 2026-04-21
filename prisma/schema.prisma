@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id         Int       @id @default(autoincrement())
+  name       String?
+  university String?
+  age        Int?
+  studyTime  Int       @default(0) // ユーザー時間 (分)
+  subjects   Subject[]
+}
+
+model Subject {
+  id        Int        @id @default(autoincrement())
+  userId    Int
+  user      User       @relation(fields: [userId], references: [id])
+  name      String
+  color     String?
+  schedules Schedule[]
+  notes     Note[]
+}
+
+model Schedule {
+  id        Int     @id @default(autoincrement())
+  subjectId Int
+  subject   Subject @relation(fields: [subjectId], references: [id])
+  dayOfWeek Int     // 0: 日, 1: 月, ... 6: 土
+  period    Int     // 時限 (1, 2, 3...)
+  startTime String? // "09:00"
+  endTime   String? // "10:30"
+}
+
+model Note {
+  id        Int      @id @default(autoincrement())
+  subjectId Int
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+  content   String   // Markdown
+  imageUrl  String?
+  createdAt DateTime @default(now())
+}
