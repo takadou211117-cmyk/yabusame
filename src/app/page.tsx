@@ -16,6 +16,8 @@ export default function Dashboard() {
   const [selectedSubject, setSelectedSubject] = useState<any>(null);
   const [selectedNote, setSelectedNote] = useState<any>(null);
   const [view, setView] = useState<'subjects' | 'notes'>('subjects');
+  const [newSubjectName, setNewSubjectName] = useState('');
+  const [isAddingSubject, setIsAddingSubject] = useState(false);
 
   useEffect(() => {
     fetchUser();
@@ -28,7 +30,6 @@ export default function Dashboard() {
       setUser(data);
       setSubjects(data.subjects || []);
       
-      // 選択中の科目を更新（ノート一覧を表示している場合）
       if (selectedSubject) {
         const updated = data.subjects.find((s: any) => s.id === selectedSubject.id);
         if (updated) setSelectedSubject(updated);
@@ -43,6 +44,40 @@ export default function Dashboard() {
       console.error('Failed to fetch user:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleManualAddSubject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSubjectName) return;
+
+    try {
+      const res = await fetch('/api/subjects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newSubjectName }),
+      });
+      if (res.ok) {
+        setNewSubjectName('');
+        setIsAddingSubject(false);
+        fetchUser();
+      }
+    } catch (error) {
+      console.error('Failed to add subject:', error);
+    }
+  };
+
+  const handleDeleteSubject = async (id: string) => {
+    if (!confirm('この科目と中のノートをすべて削除しますか？')) return;
+    try {
+      await fetch(`/api/subjects?id=${id}`, { method: 'DELETE' });
+      fetchUser();
+      if (selectedSubject?.id === id) {
+        setView('subjects');
+        setSelectedSubject(null);
+      }
+    } catch (error) {
+      console.error('Failed to delete subject:', error);
     }
   };
 
@@ -243,16 +278,53 @@ export default function Dashboard() {
                 >
                   <div className={styles.subjectHeader}>
                     <h3 style={{ marginBottom: 0 }}>{subject.name}</h3>
-                    <div 
-                      className={styles.subjectColor} 
-                      style={{ backgroundColor: subject.color || 'var(--primary)' }}
-                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <button 
+                        className={styles.deleteIconButton}
+                        onClick={(e) => { e.stopPropagation(); handleDeleteSubject(subject.id); }}
+                      >
+                        🗑️
+                      </button>
+                      <div 
+                        className={styles.subjectColor} 
+                        style={{ backgroundColor: subject.color || 'var(--primary)' }}
+                      />
+                    </div>
                   </div>
                   <div className={styles.subjectMeta}>
                     <span>📄 ノート: {subject.notes?.length || 0}件</span>
                   </div>
                 </div>
               ))}
+
+              {/* 手動追加カード */}
+              {!isAddingSubject ? (
+                <div 
+                  className={`glass-panel ${styles.subjectCard} ${styles.addSubjectCard} animate-fade-in`}
+                  onClick={() => setIsAddingSubject(true)}
+                  style={{ borderStyle: 'dashed', background: 'transparent' }}
+                >
+                  <span style={{ fontSize: '2rem' }}>+</span>
+                  <span>科目を手動で登録</span>
+                </div>
+              ) : (
+                <div className={`glass-panel ${styles.subjectCard} animate-fade-in`}>
+                  <form onSubmit={handleManualAddSubject} className={styles.manualForm}>
+                    <input 
+                      type="text" 
+                      placeholder="科目名を入力..."
+                      value={newSubjectName}
+                      onChange={e => setNewSubjectName(e.target.value)}
+                      autoFocus
+                      className={styles.input}
+                    />
+                    <div className={styles.formActions}>
+                      <button type="submit" className="button-primary">追加</button>
+                      <button type="button" className="button-secondary" onClick={() => setIsAddingSubject(false)}>戻る</button>
+                    </div>
+                  </form>
+                </div>
+              )}
             </div>
           )
         ) : (
@@ -301,7 +373,7 @@ export default function Dashboard() {
             if (modalType === 'timetable') {
               alert(`✅ 時間割の読み取り完了\n\n科目を新しく登録しました！`);
             } else {
-              alert(`✅ ノート生成完了\n\nタイトル: ${res.data?.note?.title || '不明'}`);
+              alert(`✅ ノート生成完了\n\nタイトル: ${res.note?.title || '不明'}`);
             }
           }}
         />
