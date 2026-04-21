@@ -15,15 +15,36 @@ export async function POST(req: NextRequest) {
     }
 
     if (!HAS_API_KEY) {
-      // APIキーがない場合のモックレスポンス（デモ用）
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // ユーザーを取得または作成
+      let user = await prisma.user.findFirst();
+      if (!user) {
+        user = await prisma.user.create({
+          data: { name: 'ゲストユーザー', university: '大学名未設定', age: 20 }
+        });
+      }
+
+      const mockSubjects = [
+        { name: "デモ科目: AI基礎", dayOfWeek: 1, period: 2 },
+        { name: "デモ科目: デザイン論", dayOfWeek: 3, period: 4 }
+      ];
+
+      for (const s of mockSubjects) {
+        await prisma.subject.create({
+          data: {
+            name: s.name,
+            userId: user.id,
+            color: '#4F46E5',
+            schedules: {
+              create: { dayOfWeek: s.dayOfWeek, period: s.period }
+            }
+          }
+        });
+      }
+
       return NextResponse.json({
         success: true,
-        message: "Gemini APIキーが未設定のため、モックデータを返します。",
-        subjects: [
-          { name: "新しく検出した科目A", dayOfWeek: 1, period: 2 },
-          { name: "新しく検出した科目B", dayOfWeek: 3, period: 4 }
-        ]
+        message: "Gemini APIキーが未設定のため、デモ用データをDBに保存しました。",
+        subjects: mockSubjects
       });
     }
 
