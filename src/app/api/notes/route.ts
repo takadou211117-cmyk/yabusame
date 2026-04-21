@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
+import { prisma } from '@/lib/prisma';
 
 const HAS_API_KEY = !!process.env.GEMINI_API_KEY;
 
@@ -74,14 +75,48 @@ export async function POST(req: NextRequest) {
     const text = response.text?.replace(/```json/g, '').replace(/```/g, '').trim() || '{}';
     const parsedData = JSON.parse(text);
 
-    // TODO: ここでPrismaを使ってノートを該当のSubjectフォルダ（DB）に保存します
+    // ユーザーと科目を取得または作成
+    let user = await prisma.user.findFirst();
+    if (!user) {
+      user = await prisma.user.create({
+        data: { name: 'ゲストユーザー', university: '大学名未設定', age: 20 }
+      });
+    }
+
+    // 科目を名前で検索、なければ作成
+    let subject = await prisma.subject.findFirst({
+      where: { 
+        name: parsedData.inferredSubject,
+        userId: user.id 
+      }
+    });
+
+    if (!subject) {
+      subject = await prisma.subject.create({
+        data: {
+          name: parsedData.inferredSubject,
+          userId: user.id,
+          color: '#4F46E5'
+        }
+      });
+    }
+
+    // ノートをDBに保存
+    const savedNote = await prisma.note.create({
+      data: {
+        title: parsedData.title,
+        content: parsedData.markdownContent,
+        subjectId: subject.id,
+      }
+    });
 
     return NextResponse.json({
       success: true,
-      subject: parsedData.inferredSubject,
+      subject: subject.name,
       note: {
-        title: parsedData.title,
-        content: parsedData.markdownContent
+        id: savedNote.id,
+        title: savedNote.title,
+        content: savedNote.content
       }
     });
 
