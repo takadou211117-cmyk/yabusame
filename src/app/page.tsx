@@ -13,6 +13,9 @@ export default function Dashboard() {
   const [isMobileLayout, setIsMobileLayout] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editForm, setEditForm] = useState({ name: '', university: '', age: '' });
+  const [selectedSubject, setSelectedSubject] = useState<any>(null);
+  const [selectedNote, setSelectedNote] = useState<any>(null);
+  const [view, setView] = useState<'subjects' | 'notes'>('subjects');
 
   useEffect(() => {
     fetchUser();
@@ -24,6 +27,13 @@ export default function Dashboard() {
       const data = await res.json();
       setUser(data);
       setSubjects(data.subjects || []);
+      
+      // 選択中の科目を更新（ノート一覧を表示している場合）
+      if (selectedSubject) {
+        const updated = data.subjects.find((s: any) => s.id === selectedSubject.id);
+        if (updated) setSelectedSubject(updated);
+      }
+
       setEditForm({
         name: data.name || '',
         university: data.university || '',
@@ -155,22 +165,39 @@ export default function Dashboard() {
         )}
 
         <nav className={styles.nav}>
-          <a href="#" className={`${styles.navItem} ${styles.navItemActive}`}>
+          <button className={`${styles.navItem} ${view === 'subjects' ? styles.navItemActive : ''}`} onClick={() => setView('subjects')}>
             <span className={styles.navIcon}>📚</span> 科目一覧
-          </a>
-          <a href="#" className={styles.navItem}>
+          </button>
+          <button className={styles.navItem}>
             <span className={styles.navIcon}>📅</span> 時間割管理
-          </a>
-          <a href="#" className={styles.navItem}>
+          </button>
+          <button className={styles.navItem}>
             <span className={styles.navIcon}>⚙️</span> 設定
-          </a>
+          </button>
         </nav>
       </aside>
 
       {/* メインコンテンツ */}
       <main className={styles.mainContent}>
         <div className={`${styles.header} animate-fade-in`} style={{ animationDelay: '0.1s' }}>
-          <h1>ダッシュボード</h1>
+          <div>
+            {view === 'notes' && selectedSubject ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <button 
+                  className={styles.backButton}
+                  onClick={() => { setView('subjects'); setSelectedSubject(null); }}
+                >
+                  ←
+                </button>
+                <h1 style={{ margin: 0 }}>{selectedSubject.name} のノート</h1>
+              </div>
+            ) : (
+              <h1>ダッシュボード</h1>
+            )}
+            <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
+              {view === 'subjects' ? '学習状況をひと目で把握しましょう' : '保存された板書メモを確認できます'}
+            </p>
+          </div>
           <div className={styles.headerActions}>
             <button 
               className="button-secondary"
@@ -182,65 +209,74 @@ export default function Dashboard() {
               className="button-primary"
               onClick={() => { setModalType('board'); setModalOpen(true); }}
             >
-              <span>📸</span> 黒板を撮影・アップロード
+              <span>📸</span> 黒板を撮影
             </button>
           </div>
         </div>
 
-        {subjects.length === 0 ? (
-          <div className={`glass-panel ${styles.subjectCard} animate-fade-in`} style={{ 
-            animationDelay: '0.2s', 
-            gridColumn: '1 / -1', 
-            textAlign: 'center',
-            padding: '4rem 2rem',
-            alignItems: 'center',
-            borderStyle: 'dashed',
-            background: 'rgba(255, 255, 255, 0.02)'
-          }}>
-            <span style={{ fontSize: '3rem', marginBottom: '1rem' }}>👋</span>
-            <h3 style={{ marginBottom: '0.5rem' }}>NoteGeniusへようこそ！</h3>
-            <p style={{ color: 'var(--text-secondary)' }}>
-              まだ登録されている科目がありません。<br/>
-              上の「時間割をアップロード」から、時間割の写真を読み込ませてみましょう！
-            </p>
-          </div>
-        ) : (
-          <div className={styles.grid}>
-            {subjects.map((subject, index) => (
-              <div 
-                key={subject.id} 
-                className={`glass-panel ${styles.subjectCard} animate-fade-in`}
-                style={{ animationDelay: `${0.2 + index * 0.1}s` }}
-              >
-                <div className={styles.subjectHeader}>
-                  <h3 style={{ marginBottom: 0 }}>{subject.name}</h3>
-                  <div 
-                    className={styles.subjectColor} 
-                    style={{ backgroundColor: subject.color || 'var(--primary)' }}
-                  />
-                </div>
-                <div className={styles.subjectMeta}>
-                  <span>🕒 次回: {subject.nextClass || '未設定'}</span>
-                  <span>📄 ノート: {subject.notesCount || 0}件</span>
-                </div>
-              </div>
-            ))}
-            
-            {/* 科目追加カード */}
-            <div 
-              className={`glass-panel ${styles.subjectCard} animate-fade-in`}
-              style={{ 
-                animationDelay: `${0.2 + subjects.length * 0.1}s`,
-                borderStyle: 'dashed',
-                background: 'transparent',
-                justifyContent: 'center',
-                alignItems: 'center',
-                color: 'var(--text-secondary)'
-              }}
-            >
-              <span style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>+</span>
-              <span>科目を手動追加</span>
+        {view === 'subjects' ? (
+          subjects.length === 0 ? (
+            <div className={`glass-panel ${styles.subjectCard} animate-fade-in`} style={{ 
+              animationDelay: '0.2s', 
+              gridColumn: '1 / -1', 
+              textAlign: 'center',
+              padding: '4rem 2rem',
+              alignItems: 'center',
+              borderStyle: 'dashed',
+              background: 'rgba(255, 255, 255, 0.02)'
+            }}>
+              <span style={{ fontSize: '3rem', marginBottom: '1rem' }}>👋</span>
+              <h3 style={{ marginBottom: '0.5rem' }}>NoteGeniusへようこそ！</h3>
+              <p style={{ color: 'var(--text-secondary)' }}>
+                まだ登録されている科目がありません。<br/>
+                上の「時間割をアップロード」から、時間割の写真を読み込ませてみましょう！
+              </p>
             </div>
+          ) : (
+            <div className={styles.grid}>
+              {subjects.map((subject: any, index: number) => (
+                <div 
+                  key={subject.id} 
+                  className={`glass-panel ${styles.subjectCard} animate-fade-in`}
+                  style={{ animationDelay: `${0.2 + index * 0.1}s` }}
+                  onClick={() => { setSelectedSubject(subject); setView('notes'); }}
+                >
+                  <div className={styles.subjectHeader}>
+                    <h3 style={{ marginBottom: 0 }}>{subject.name}</h3>
+                    <div 
+                      className={styles.subjectColor} 
+                      style={{ backgroundColor: subject.color || 'var(--primary)' }}
+                    />
+                  </div>
+                  <div className={styles.subjectMeta}>
+                    <span>📄 ノート: {subject.notes?.length || 0}件</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        ) : (
+          <div className={styles.noteList}>
+            {selectedSubject?.notes?.length === 0 ? (
+              <p style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '3rem' }}>
+                この科目のノートはまだありません。
+              </p>
+            ) : (
+              <div className={styles.grid}>
+                {selectedSubject?.notes?.map((note: any) => (
+                  <div 
+                    key={note.id} 
+                    className={`glass-panel ${styles.noteCard} animate-fade-in`}
+                    onClick={() => setSelectedNote(note)}
+                  >
+                    <div className={styles.noteDate}>{new Date(note.createdAt).toLocaleDateString()}</div>
+                    <h3>{note.title}</h3>
+                    <p style={{ opacity: 0.7, fontSize: '0.9rem' }}>{note.content.slice(0, 80)}...</p>
+                    <div className={styles.noteFooter}>詳しく見る →</div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </main>
@@ -261,9 +297,7 @@ export default function Dashboard() {
           type={modalType}
           onUploadSuccess={(res) => {
             console.log('Upload success:', res);
-            // データを再取得して反映
             fetchUser();
-            
             if (modalType === 'timetable') {
               alert(`✅ 時間割の読み取り完了\n\n科目を新しく登録しました！`);
             } else {
@@ -271,6 +305,27 @@ export default function Dashboard() {
             }
           }}
         />
+
+        {/* Note Detail Overlay */}
+        {selectedNote && (
+          <div className={styles.modalOverlay} onClick={() => setSelectedNote(null)}>
+            <div className={`${styles.modalContent} ${styles.noteDetail}`} onClick={e => e.stopPropagation()}>
+              <button className={styles.closeButton} onClick={() => setSelectedNote(null)}>&times;</button>
+              <div className={styles.noteDetailContent}>
+                <header>
+                  <span className={styles.tag}>{selectedSubject?.name}</span>
+                  <h1>{selectedNote.title}</h1>
+                  <time>{new Date(selectedNote.createdAt).toLocaleString()}</time>
+                </header>
+                <div className={styles.markdownBody}>
+                  <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', marginTop: '1.5rem' }}>
+                    {selectedNote.content}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
   );
 }
