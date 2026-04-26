@@ -1,14 +1,32 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    // 最初のユーザーを取得
-    let user = await prisma.user.findFirst({
-      include: {
-        subjects: true,
-      },
-    });
+    const requestedUserId = req.nextUrl.searchParams.get('userId');
+
+    let user;
+    if (requestedUserId) {
+      user = await prisma.user.findUnique({
+        where: { id: parseInt(requestedUserId, 10) },
+        include: {
+          subjects: true,
+        },
+      });
+
+      if (!user) {
+        return NextResponse.json({ error: 'ユーザーが見つかりません' }, { status: 404 });
+      }
+    }
+
+    if (!user) {
+      // 既定のユーザーを取得
+      user = await prisma.user.findFirst({
+        include: {
+          subjects: true,
+        },
+      });
+    }
 
     // ユーザーがいない場合は初期ユーザーを作成（デモ・開発用）
     if (!user) {

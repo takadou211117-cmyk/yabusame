@@ -56,10 +56,7 @@ export async function POST(req: NextRequest) {
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
     const prompt = `
-      この画像は学生の時間割表です。画像から科目名、曜日、時限（時間帯）を抽出し、以下のJSONフォーマットで返してください。
-      JSON以外の文章を含めないでください。
-      
-      フォーマット:
+      この画像は学生の時間割表です。必要な情報だけを抽出し、以下のJSONフォーマットで返してください。出力はJSONのみ、説明文は不要です。
       {
         "subjects": [
           { "name": "科目名", "dayOfWeek": "月/火/水/木/金/土", "period": "時限の数字（例: 1）" }
@@ -68,9 +65,9 @@ export async function POST(req: NextRequest) {
     `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-1.5-pro',
+      model: 'gemini-1.5-mini',
       temperature: 0.0,
-      maxOutputTokens: 600,
+      maxOutputTokens: 400,
       contents: [
         {
           role: 'user',

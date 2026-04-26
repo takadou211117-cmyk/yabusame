@@ -38,18 +38,8 @@ export async function POST(req: NextRequest) {
 
     // 1. 画像から内容を読み取り、東大生クオリティのMarkdownノートを生成するプロンプト
     const prompt = `
-      あなたは東京大学に首席で合格した天才的な学生です。
-      提供された画像は授業中の黒板またはスライドの写真です。
-
-      この画像の内容を完璧に理解し、後から復習するのに最適な「東大生クオリティのノート」をMarkdown形式で作成してください。
-      
-      【ノート作成のルール】
-      - 構造的で非常に論理的な構成にする（大見出し、中見出し、箇条書きを駆使する）
-      - 黒板に書かれている数式や重要な用語は正確に抽出する
-      - 黒板の内容だけでなく、その背景にある概念や「なぜそうなるのか」という補足説明（東大生ポイント）を加える
-      - 視覚的に見やすいMarkdown（引用、太字、リストなど）を使う
-      
-      以下のJSONフォーマットで返してください。JSON以外の文章は含めないでください。
+      この画像は授業中の黒板またはスライドの写真です。内容を正確に理解し、復習しやすいMarkdownノートを作成してください。
+      出力はJSONのみで、余計な説明は不要です。
       {
         "inferredSubject": "画像から推測される科目名（例: 線形代数学、力学など）",
         "title": "ノートのタイトル",
@@ -58,9 +48,9 @@ export async function POST(req: NextRequest) {
     `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-1.5-pro',
-      temperature: 0.1,
-      maxOutputTokens: 1200,
+      model: 'gemini-1.5-mini',
+      temperature: 0.0,
+      maxOutputTokens: 900,
       contents: [
         {
           role: 'user',

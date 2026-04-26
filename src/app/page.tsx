@@ -24,6 +24,18 @@ export default function Dashboard() {
 
   useEffect(() => {
     const savedUserId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
+    const cachedUser = typeof window !== 'undefined' ? localStorage.getItem('cachedUser') : null;
+
+    if (cachedUser) {
+      try {
+        const parsed = JSON.parse(cachedUser);
+        setUser(parsed);
+        setSubjects(parsed.subjects || []);
+      } catch {
+        // ignore invalid cache
+      }
+    }
+
     if (!savedUserId) {
       setAuthLoading(false);
       router.replace('/login');
@@ -47,6 +59,7 @@ export default function Dashboard() {
 
       setUser(data);
       setSubjects(data.subjects || []);
+      localStorage.setItem('cachedUser', JSON.stringify(data));
       
       if (selectedSubject) {
         const updated = data.subjects.find((s: any) => s.id === selectedSubject.id);
@@ -416,7 +429,13 @@ export default function Dashboard() {
 
             if (modalType === 'timetable') {
               if (res.createdSubjects?.length) {
-                setSubjects((prev) => [...prev, ...res.createdSubjects]);
+                setSubjects((prev) => {
+                  const nextSubjects = [...prev, ...res.createdSubjects];
+                  if (user) {
+                    localStorage.setItem('cachedUser', JSON.stringify({ ...user, subjects: nextSubjects }));
+                  }
+                  return nextSubjects;
+                });
               }
               alert(`✅ 時間割の読み取り完了\n\n科目を新しく登録しました！`);
             } else {
@@ -429,17 +448,22 @@ export default function Dashboard() {
                     (s: any) => s.id === subjectData.id || s.name === subjectData.name
                   );
 
+                  const updatedSubjects = [...prev];
                   if (existingIndex >= 0) {
-                    const updated = [...prev];
-                    const target = updated[existingIndex];
-                    updated[existingIndex] = {
+                    const target = updatedSubjects[existingIndex];
+                    updatedSubjects[existingIndex] = {
                       ...target,
                       notes: [...(target.notes || []), note],
                     };
-                    return updated;
+                  } else {
+                    updatedSubjects.push({ ...subjectData, notes: [note] });
                   }
 
-                  return [...prev, { ...subjectData, notes: [note] }];
+                  if (user) {
+                    localStorage.setItem('cachedUser', JSON.stringify({ ...user, subjects: updatedSubjects }));
+                  }
+
+                  return updatedSubjects;
                 });
 
                 if (selectedSubject?.name === subjectData.name) {

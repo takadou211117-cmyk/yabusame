@@ -37,6 +37,32 @@ export default function UploadModal({ isOpen, onClose, type, onUploadSuccess }: 
     setIsDragging(false);
   };
 
+  const resizeImageFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) return file;
+
+    const maxDimension = 1200;
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+
+    if (scale === 1) {
+      return file;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return file;
+
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob((b) => resolve(b), file.type, 0.8);
+    });
+
+    return blob ? new File([blob], file.name, { type: file.type }) : file;
+  };
+
   const processFile = async (file: File) => {
     if (!file.type.startsWith('image/')) {
       alert('画像ファイルを選択してください');
@@ -44,12 +70,18 @@ export default function UploadModal({ isOpen, onClose, type, onUploadSuccess }: 
     }
 
     setIsUploading(true);
-    setStatusText('画像を解析中... (AIが処理しています)');
+    setStatusText('画像を圧縮中...');
 
     try {
-      // 実際はAPIルートに画像を送信します
+      const optimizedFile = await resizeImageFile(file);
+      const originalSize = (file.size / 1024).toFixed(1);
+      const optimizedSize = (optimizedFile.size / 1024).toFixed(1);
+      console.log(`Image optimized: ${originalSize}KB → ${optimizedSize}KB`);
+
+      setStatusText('画像を解析中... (AIが処理しています)');
+
       const formData = new FormData();
-      formData.append('image', file);
+      formData.append('image', optimizedFile);
       
       const res = await fetch(`/api/${type}`, { 
         method: 'POST', 
