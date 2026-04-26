@@ -393,10 +393,40 @@ export default function Dashboard() {
           type={modalType}
           onUploadSuccess={(res) => {
             console.log('Upload success:', res);
-            fetchUser();
+
             if (modalType === 'timetable') {
+              if (res.createdSubjects?.length) {
+                setSubjects((prev) => [...prev, ...res.createdSubjects]);
+              }
               alert(`✅ 時間割の読み取り完了\n\n科目を新しく登録しました！`);
             } else {
+              const note = res.note;
+              const subjectData = res.subject;
+
+              if (note && subjectData) {
+                setSubjects((prev) => {
+                  const existingIndex = prev.findIndex(
+                    (s: any) => s.id === subjectData.id || s.name === subjectData.name
+                  );
+
+                  if (existingIndex >= 0) {
+                    const updated = [...prev];
+                    const target = updated[existingIndex];
+                    updated[existingIndex] = {
+                      ...target,
+                      notes: [...(target.notes || []), note],
+                    };
+                    return updated;
+                  }
+
+                  return [...prev, { ...subjectData, notes: [note] }];
+                });
+
+                if (selectedSubject?.name === subjectData.name) {
+                  setSelectedSubject((prev: any) => prev ? { ...prev, notes: [...(prev.notes || []), note] } : prev);
+                }
+              }
+
               alert(`✅ ノート生成完了\n\nタイトル: ${res.note?.title || '不明'}`);
             }
           }}

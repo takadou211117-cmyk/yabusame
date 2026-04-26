@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true,
         message: "Gemini APIキーが未設定のため、デモ用データをDBに保存しました。",
-        subjects: mockSubjects
+        createdSubjects: mockSubjects
       });
     }
 
@@ -68,7 +68,9 @@ export async function POST(req: NextRequest) {
     `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-pro',
+      model: 'gemini-1.5-pro',
+      temperature: 0.0,
+      maxOutputTokens: 600,
       contents: [
         {
           role: 'user',
@@ -100,9 +102,8 @@ export async function POST(req: NextRequest) {
     const createdSubjects = [];
     if (parsedData.subjects && Array.isArray(parsedData.subjects)) {
       const colors = ['#4F46E5', '#EC4899', '#10B981', '#F59E0B', '#3B82F6', '#8B5CF6'];
-      
-      for (const s of parsedData.subjects) {
-        const subject = await prisma.subject.create({
+      const created = await Promise.all(parsedData.subjects.map(async (s: any) => {
+        return prisma.subject.create({
           data: {
             name: s.name,
             userId: user.id,
@@ -115,8 +116,8 @@ export async function POST(req: NextRequest) {
             }
           }
         });
-        createdSubjects.push(subject);
-      }
+      }));
+      createdSubjects.push(...created);
     }
 
     return NextResponse.json({

@@ -15,11 +15,14 @@ export async function POST(req: NextRequest) {
     }
 
     if (!HAS_API_KEY) {
-      await new Promise(resolve => setTimeout(resolve, 3000));
       return NextResponse.json({
         success: true,
         message: "Gemini APIキーが未設定のため、モックのノートデータを返します。",
-        subject: "線形代数学",
+        subject: {
+          id: 'mock-subject',
+          name: '線形代数学',
+          color: '#4F46E5'
+        },
         note: {
           title: "行列の固有値と固有ベクトル",
           content: "# 行列の固有値と固有ベクトル\n\n## 1. 固有値方程式\n正方行列 $A$ に対して、$A\\vec{x} = \\lambda\\vec{x}$ を満たすスカラー $\\lambda$ を固有値、ベクトル $\\vec{x} (\\neq \\vec{0})$ を固有ベクトルと呼ぶ。\n\n## 2. 求め方\n1. 固有多項式 $|A - \\lambda I| = 0$ を解き、固有値 $\\lambda$ を求める。\n2. 各 $\\lambda$ に対して連立方程式 $(A - \\lambda I)\\vec{x} = \\vec{0}$ を解き、固有ベクトル $\\vec{x}$ を求める。\n\n> 💡 **東大生ポイント**: 行列の対角化可能性は、独立な固有ベクトルの数と次元が一致するかどうかで判定できる！",
@@ -55,7 +58,9 @@ export async function POST(req: NextRequest) {
     `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-pro',
+      model: 'gemini-1.5-pro',
+      temperature: 0.1,
+      maxOutputTokens: 1200,
       contents: [
         {
           role: 'user',
@@ -83,18 +88,20 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    const inferredSubjectName = parsedData.inferredSubject || '未分類';
+
     // 科目を名前で検索、なければ作成
     let subject = await prisma.subject.findFirst({
-      where: { 
-        name: parsedData.inferredSubject,
-        userId: user.id 
+      where: {
+        name: inferredSubjectName,
+        userId: user.id
       }
     });
 
     if (!subject) {
       subject = await prisma.subject.create({
         data: {
-          name: parsedData.inferredSubject,
+          name: inferredSubjectName,
           userId: user.id,
           color: '#4F46E5'
         }
@@ -112,7 +119,11 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      subject: subject.name,
+      subject: {
+        id: subject.id,
+        name: subject.name,
+        color: subject.color,
+      },
       note: {
         id: savedNote.id,
         title: savedNote.title,
