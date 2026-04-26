@@ -1,13 +1,16 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 import UploadModal from '../components/UploadModal';
 
 export default function Dashboard() {
+  const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [subjects, setSubjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
   const [modalType, setModalType] = useState<'timetable' | 'board'>('timetable');
   const [modalOpen, setModalOpen] = useState(false);
   const [isMobileLayout, setIsMobileLayout] = useState(false);
@@ -20,13 +23,28 @@ export default function Dashboard() {
   const [isAddingSubject, setIsAddingSubject] = useState(false);
 
   useEffect(() => {
-    fetchUser();
+    const savedUserId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
+    if (!savedUserId) {
+      setAuthLoading(false);
+      router.replace('/login');
+      return;
+    }
+
+    fetchUser(savedUserId);
   }, []);
 
-  const fetchUser = async () => {
+  const fetchUser = async (userId?: string) => {
     try {
-      const res = await fetch('/api/user');
+      const query = userId ? `?userId=${encodeURIComponent(userId)}` : '';
+      const res = await fetch(`/api/user${query}`);
       const data = await res.json();
+
+      if (data?.error) {
+        console.error('Failed to fetch user:', data.error);
+        router.replace('/login');
+        return;
+      }
+
       setUser(data);
       setSubjects(data.subjects || []);
       
@@ -42,8 +60,10 @@ export default function Dashboard() {
       });
     } catch (error) {
       console.error('Failed to fetch user:', error);
+      router.replace('/login');
     } finally {
       setLoading(false);
+      setAuthLoading(false);
     }
   };
 
@@ -125,11 +145,11 @@ export default function Dashboard() {
     return `linear-gradient(135deg, ${from} 0%, ${to} 100%)`;
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className={styles.loading}>
         <div className={styles.spinner}></div>
-        <p>AI Student Assistant 起動中...</p>
+        <p>認証情報を確認しています...</p>
       </div>
     );
   }

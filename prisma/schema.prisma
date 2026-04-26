@@ -3,45 +3,85 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id         Int       @id @default(autoincrement())
+  id         String    @id
   name       String?
-  university String?
   age        Int?
-  studyTime  Int       @default(0) // ユーザー時間 (分)
+  createdAt  DateTime  @default(now())
+  department String?
+  email      String    @unique
+  grade      Int?
+  password   String
+  role       String    @default("user")
+  school     String?
+  updatedAt  DateTime
   subjects   Subject[]
 }
 
 model Subject {
-  id        Int        @id @default(autoincrement())
-  userId    Int
-  user      User       @relation(fields: [userId], references: [id])
-  name      String
-  color     String?
-  schedules Schedule[]
-  notes     Note[]
+  id             String           @id
+  userId         String
+  name           String
+  color          String?
+  createdAt      DateTime         @default(now())
+  emoji          String?
+  professor      String?
+  room           String?
+  updatedAt      DateTime
+  LectureSession LectureSession[]
+  notes          Note[]
+  schedules      Schedule[]
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Schedule {
-  id        Int     @id @default(autoincrement())
-  subjectId Int
-  subject   Subject @relation(fields: [subjectId], references: [id])
-  dayOfWeek Int     // 0: 日, 1: 月, ... 6: 土
-  period    Int     // 時限 (1, 2, 3...)
-  startTime String? // "09:00"
-  endTime   String? // "10:30"
+  id        String  @id
+  subjectId String
+  dayOfWeek Int
+  period    Int
+  startTime String?
+  endTime   String?
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
 }
 
 model Note {
-  id        Int      @id @default(autoincrement())
-  subjectId Int
-  subject   Subject  @relation(fields: [subjectId], references: [id])
-  content   String   // Markdown
-  imageUrl  String?
-  createdAt DateTime @default(now())
+  id             String          @id
+  subjectId      String
+  content        String
+  createdAt      DateTime        @default(now())
+  isFavorite     Boolean         @default(false)
+  sessionId      String?         @unique
+  title          String
+  updatedAt      DateTime
+  LectureSession LectureSession? @relation(fields: [sessionId], references: [id])
+  subject        Subject         @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+}
+
+model LectureSession {
+  id         String   @id
+  subjectId  String
+  date       DateTime
+  sessionNum Int      @default(1)
+  createdAt  DateTime @default(now())
+  Subject    Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  Note       Note?
+  Photo      Photo[]
+}
+
+model Photo {
+  id             String         @id
+  sessionId      String
+  url            String
+  storageKey     String?
+  memo           String?
+  takenAt        DateTime?
+  isFavorite     Boolean        @default(false)
+  sortOrder      Int            @default(0)
+  createdAt      DateTime       @default(now())
+  LectureSession LectureSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }
