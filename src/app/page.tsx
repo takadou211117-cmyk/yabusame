@@ -106,6 +106,25 @@ export default function Dashboard() {
 
   const toggleLayout = () => setIsMobileLayout(prev => !prev);
 
+  const noteGradientColors = [
+    ['#F97316', '#FACC15'],
+    ['#22C55E', '#14B8A6'],
+    ['#3B82F6', '#8B5CF6'],
+    ['#EF4444', '#EC4899'],
+    ['#0EA5E9', '#9333EA'],
+    ['#F43F5E', '#FB7185'],
+  ];
+
+  const getNoteGradient = (note: any) => {
+    const key = note?.id ?? note?.title ?? '';
+    let hash = 0;
+    for (let i = 0; i < key.length; i++) {
+      hash = (hash * 31 + key.charCodeAt(i)) % noteGradientColors.length;
+    }
+    const [from, to] = noteGradientColors[hash];
+    return `linear-gradient(135deg, ${from} 0%, ${to} 100%)`;
+  };
+
   if (loading) {
     return (
       <div className={styles.loading}>
@@ -339,11 +358,16 @@ export default function Dashboard() {
                   <div 
                     key={note.id} 
                     className={`glass-panel ${styles.noteCard} animate-fade-in`}
+                    style={{
+                      backgroundImage: getNoteGradient(note),
+                      color: '#fff',
+                      borderColor: 'rgba(255, 255, 255, 0.2)',
+                    }}
                     onClick={() => setSelectedNote(note)}
                   >
                     <div className={styles.noteDate}>{new Date(note.createdAt).toLocaleDateString()}</div>
                     <h3>{note.title}</h3>
-                    <p style={{ opacity: 0.7, fontSize: '0.9rem' }}>{note.content.slice(0, 80)}...</p>
+                    <p style={{ opacity: 0.9, fontSize: '0.9rem' }}>{note.content.slice(0, 80)}...</p>
                     <div className={styles.noteFooter}>詳しく見る →</div>
                   </div>
                 ))}
@@ -385,7 +409,15 @@ export default function Dashboard() {
               <button className={styles.closeButton} onClick={() => setSelectedNote(null)}>&times;</button>
               <div className={styles.noteDetailContent}>
                 <header>
-                  <span className={styles.tag}>{selectedSubject?.name}</span>
+                  <span
+                    className={styles.tag}
+                    style={{
+                      backgroundImage: getNoteGradient(selectedNote),
+                      color: '#fff',
+                    }}
+                  >
+                    {selectedSubject?.name}
+                  </span>
                   <h1>{selectedNote.title}</h1>
                   <time>{new Date(selectedNote.createdAt).toLocaleString()}</time>
                 </header>
